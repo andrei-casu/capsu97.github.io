@@ -1,85 +1,80 @@
 var stage;
 var wallpaper;
 var player;
+var keys = [false, false, false, false];
 
-$(document).keydown(function(e) {
-	if (e.which == 37){
-		wallpaper.isMoving = true;
-		wallpaper.direction = "left";
-	}
-	else if (e.which == 38){
-		wallpaper.isMoving = true;
-		wallpaper.direction = "up";
-	}
-	else if (e.which == 39){
-		wallpaper.isMoving = true;
-		wallpaper.direction = "right";
-	}
-	else if (e.which == 40){
-		wallpaper.isMoving = true;
-		wallpaper.direction = "down";
-	}
-	else{
-		wallpaper.isMoving = false;
-	}
-});
+function Player(path){
+	createjs.Bitmap.call(this, path);
+	// var bounds = this.getBounds();
+	this.width = 40;
+	this.height = 40;
+	this.isMoving = false;
+	this.vel = 5;
 
-$(document).keyup(function(e) {
-	if (e.which >=37 && e.which <=40)
-		wallpaper.isMoving = false;
-});
+	this.update = function(){
 
-function moveItem(){
-		if (!this.isMoving)
+		var i, aux = 0;
+		var auxvel = this.vel;
+
+		for (i = 0; i < 4; ++i)
+			if (keys[i])
+				++aux;
+		
+		if (!aux){
+			isMoving = false;
 			return;
-		if (this.direction == 'left'){
-			this.x -= this.velx;
+			//not moving
 		}
-		else if (this.direction == 'up'){
-			this.y -= this.vely;
-		}
-		else if (this.direction == 'right'){
-			this.x += this.velx;
-		}
-		else if (this.direction == 'down'){
-			this.y += this.vely;
-		}
+		else if (aux <2)
+			auxvel = Math.sqrt(2 * this.vel * this.vel);
+
+		if (keys[0]) this.x -= auxvel;
+		if (keys[1]) this.y -=auxvel;
+		if (keys[2]) this.x += auxvel;
+		if (keys[3]) this.y +=auxvel;
+
+		if (this.x < 0)
+			this.x = 0;
+		if (this.y < 0)
+			this.y = 0;
+		if (this.x + this.width > 800)
+			this.x = 800 - this.width;
+		if (this.y + this.height > 600)
+			this.y = 600 - this.height;
+		// console.log(this.getBounds());
 	};
+	this.collidedWith = function(object){
+		console.log("Collided");
+	};
+}
+Player.prototype = Object.create(createjs.Bitmap.prototype); 
+Player.prototype.constructor = Player;
+
+$(document).keydown(function(e){
+	if (e.which >= 37 && e.which <=40){
+		keys[e.which - 37] = true;
+	}
+});
+$(document).keyup(function(e){
+	if (e.which >= 37 && e.which <=40){
+		keys[e.which - 37] = false;
+	}
+});
+
 
 function init(){
 	stage = new createjs.Stage("canvas");
-	wallpaper = new createjs.Bitmap("assets/player.png");
-	wallpaper.x = 0;
-	wallpaper.y = 0;
-	wallpaper.isMoving = false;
-	wallpaper.direction = "none";
-	wallpaper.velx = 7;
-	wallpaper.vely = 7;
-	stage.addChild(wallpaper);
+	player = new Player('assets/player.png');
+	// stage.addEventListener("added", function(){console.log(player.getBounds());});
+	stage.addChild(player);
 
-	wallpaper.move = moveItem;
-
+	console.log(player.getBounds());
+	
 	createjs.Ticker.setFPS(60);
 	createjs.Ticker.addEventListener("tick", update);
 }
 
-function move(dir){
-	if (dir == 'up'){
-		wallpaper.y -= wallpaper.vely;
-	}
-	else if (dir == 'down'){
-		wallpaper.y += wallpaper.vely;
-	}
-	else if (dir == 'left'){
-		wallpaper.x -= wallpaper.velx;
-	}
-	else if (dir == 'right'){
-		wallpaper.x += wallpaper.velx;
-	}
-}
-
 function update(){
-	//wallpaper.x += 5;
-	wallpaper.move();
+	player.update();
 	stage.update();
 }

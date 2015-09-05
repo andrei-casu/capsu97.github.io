@@ -6,6 +6,9 @@ var nrPhantom = 0;
 var phantom = [];
 var phantomSpeed = 7;
 
+var last3powerup = 0;
+var nrpu3 = 0;
+var powerup3 = [];
 var scor = 0;
 
 var target;
@@ -40,6 +43,7 @@ function Phantom(path){
 
 	this.checkCollision = function() {
     if ( player.x >= this.x + this.width || player.x + player.width <= this.x || player.y >= this.y + this.height || player.y + player.height <= this.y ) return false;
+    
     return true;
 	}
 }
@@ -63,21 +67,45 @@ function Target(path){
 
 	this.checkCollision = function() {
     if ( player.x >= this.x + this.width || player.x + player.width <= this.x || player.y >= this.y + this.height || player.y + player.height <= this.y ) return false;
-    this.reset();
-    ++scor;
-    $('#score').text(""+scor);
-    // console.log("+1 scor");
-    return true;
+	    this.reset();
+	    ++scor;
+
+	    if (scor - last3powerup >= 5){
+	    	last3powerup = scor;
+	    	AddPowerUp3();
+	    }
+
+	    $('#score').text(""+scor);
+	    AddPhantom();
+	    // console.log("+1 scor");
+	    return true;
 	}
 }
 Target.prototype = Object.create(createjs.Bitmap.prototype);
 Target.prototype.constructor = Target;
 
 
+function PowerUp3(path){
+	Target.call(this, path);
 
-function StartPhantomTimer(){
-	setInterval(AddPhantom, dif*1000);
+	this.checkCollision = function(){
+		if ( player.x >= this.x + this.width || player.x + player.width <= this.x || player.y >= this.y + this.height || player.y + player.height <= this.y ) return false;
+	    // this.reset();
+	    return true;
+	};
 }
+PowerUp3.prototype = Object.create(Target.prototype);
+PowerUp3.prototype.constructor = PowerUp3;
+
+function AddPowerUp3(){
+	powerup3[nrpu3++] = new PowerUp3("assets/powerup.png");
+	stage.addChild(powerup3[nrpu3-1]);
+}
+
+
+// function StartPhantomTimer(){
+// 	setInterval(AddPhantom, dif*1000);
+// }
 
 function AddPhantom(){
 	phantom[nrPhantom] = new Phantom("assets/phantom.png");
@@ -163,33 +191,65 @@ function init(){
 	
 	createjs.Ticker.setFPS(60);
 	createjs.Ticker.addEventListener("tick", update);
-
-	StartPhantomTimer();
+	// window.setInterval(add3powerup, 3000);//3 sec
 }
 
-function update(){
+function add3powerup(last){
+	console.log("powerup");
+}
+
+function update(event){
+	if (event.paused)
+		return;
 	
 	MovingPhantoms();
 	player.update();
 	DetectingCollision();
 	target.checkCollision();
+	DetectingPowerUp3();
 
+
+	//if in 3 seconds you get 5, you get a remove 3 powerup
 	
 	stage.update();
 }
 
-function MovingPhantoms(){
-	for (var i=0; i<nrPhantom; ++i){
-		phantom[i].move();
+function DetectingPowerUp3(){
+	var i, j, nr;
+	for (i = 0; i < nrpu3; ++i){
+		if (powerup3[i] != undefined){
+			if (powerup3[i].checkCollision()){
+				//destroy 3 elements
+				for (j = nr = 0; j < nrPhantom && nr < 3; ++j)
+					if (phantom[j]!=undefined){
+						++nr;
+						stage.removeChild(phantom[j]);
+						phantom[j] = undefined;
+					}
+				//destroy myslef
+				stage.removeChild(powerup3[i]);
+				powerup3[i] = undefined;
+			}
+		}
 	}
 }
 
+function MovingPhantoms(){
+	for (var i=0; i<nrPhantom; ++i)
+		if (phantom[i]!=undefined){
+			phantom[i].move();
+		}
+}
+
 function DetectingCollision(){
-	for (i=0; i<nrPhantom; ++i)
-		if (phantom[i].checkCollision())
-		{
-			gameOver=true;
-			return;
+	for (var i=0; i<nrPhantom; ++i)
+		if (phantom[i]!=undefined){
+			if (phantom[i].checkCollision())
+			{
+				gameOver=true;
+				createjs.Ticker.setPaused(true); 
+				return;
+			}
 		}
 }
 

@@ -17,6 +17,11 @@
 body{
 	background-color: #3D7D99;
 	font-family: Verdana;
+	color: #ffa400;
+}
+
+.inLine{
+	display: inline;
 }
 
 #canvas{
@@ -29,7 +34,6 @@ body{
 }
 
 .title{
-	color: #ffa400;
 	width: 60%;
 	font-size: 200%;
 	padding-left: 20%;
@@ -39,6 +43,11 @@ body{
 <body onload="init();">
 	<div class = "container">
 		<div class = "title">Outa-Sight</div>
+		<div id = "info"> 
+			<div class = 'inLine'>Current Score: </div> 
+			<div id = 'score' class = 'inLine'>0</div> 
+		</div>
+
     	<canvas id="canvas" width="800" height="600">
     	</canvas>
 	</div>

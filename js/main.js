@@ -6,6 +6,10 @@ var nrPhantom = 0;
 var phantom = [];
 var phantomSpeed = 7;
 
+var scor = 0;
+
+var target;
+
 function Phantom(path){
 	createjs.Bitmap.call(this, path);
 
@@ -41,6 +45,35 @@ function Phantom(path){
 }
 Phantom.prototype = Object.create(createjs.Bitmap.prototype);
 Phantom.prototype.constructor = Phantom;
+
+
+function Target(path){
+	createjs.Bitmap.call(this, path);
+
+	// var phantomBounds = this.getBounds();
+	this.width = 40;//phantomBounds.width;
+	this.height = 40;//phantomBounds.height;
+	this.x = parseInt(Math.random()*1000000) % (stage.canvas.width-this.width);
+	this.y = parseInt(Math.random()*1000000) % (stage.canvas.height-this.height);
+	
+	this.reset = function(){
+		this.x = parseInt(Math.random()*1000000) % (stage.canvas.width-this.width);
+		this.y = parseInt(Math.random()*1000000) % (stage.canvas.height-this.height);
+	}
+
+	this.checkCollision = function() {
+    if ( player.x >= this.x + this.width || player.x + player.width <= this.x || player.y >= this.y + this.height || player.y + player.height <= this.y ) return false;
+    this.reset();
+    ++scor;
+    $('#score').text(""+scor);
+    // console.log("+1 scor");
+    return true;
+	}
+}
+Target.prototype = Object.create(createjs.Bitmap.prototype);
+Target.prototype.constructor = Target;
+
+
 
 function StartPhantomTimer(){
 	setInterval(AddPhantom, dif*1000);
@@ -123,7 +156,9 @@ $(document).keyup(function(e){
 function init(){
 	stage = new createjs.Stage("canvas");
 	player = new Player('assets/player.png');
+	target = new Target('assets/target.png');
 	stage.addChild(player);
+	stage.addChild(target);
 	// stage.addEventListener("added", function(){console.log(player.getBounds());});
 	
 	createjs.Ticker.setFPS(60);
@@ -137,6 +172,8 @@ function update(){
 	MovingPhantoms();
 	player.update();
 	DetectingCollision();
+	target.checkCollision();
+
 	
 	stage.update();
 }
